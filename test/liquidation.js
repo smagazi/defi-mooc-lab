@@ -9,7 +9,7 @@ describe("Liquidation", function () {
         method: "hardhat_reset",
         params: [{
           forking: {
-            jsonRpcUrl: process.env.ALCHE_API,
+            jsonRpcUrl: "https://eth-mainnet.g.alchemy.com/v2/UoeQ-IqM_gxrHufDBoRTo0846l5PznaS",
             blockNumber: 12489619,
           }
         }]
