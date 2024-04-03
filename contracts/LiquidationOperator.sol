@@ -192,18 +192,13 @@ contract LiquidationOperator is IUniswapV2Callee {
     }
 
     constructor() {
-        // TODO: (optional) initialize your contract
-        //   *** Your code here ***
-        // END TODO
-
         // DONE
     }
 
-    // TODO: add a `receive` function so that you can withdraw your WETH
     receive() external payable {
         // DONE
     }
-    // END TODO
+
 
     // required by the testing script, entry for your liquidation call
     function operate() external {
@@ -224,7 +219,7 @@ contract LiquidationOperator is IUniswapV2Callee {
 
         // 1. get the target user account data & make sure it is liquidatable
         
-        require(healthFactor < hf_threshold, 'HEALTH FACTOR ERROR: Liquidation cannot be executred');
+        require(healthFactor < hf_threshold, 'HEALTH FACTOR ERROR: Liquidation cannot be executed');
 
         // 2. call flash swap to liquidate the target user
         // based on https://etherscan.io/tx/0xac7df37a43fab1b130318bbb761861b8357650db2e2c6493b73d6da3d9581077
@@ -246,7 +241,7 @@ contract LiquidationOperator is IUniswapV2Callee {
         uint256 amount1,
         bytes calldata
     ) external override {
-        require(msg.sender == USDT_WETH_pair_addr);
+        require(msg.sender == address(USDT_WETH_pair));
 
         uint256 WETH_reserve_1;
         uint256 WETH_reserve_2;
@@ -254,7 +249,7 @@ contract LiquidationOperator is IUniswapV2Callee {
         uint256 WBTC_reserve;
 
         // REMEMBER: VARIABLE ASSIGNMENT ORDER MATTERS!
-        (USDT_reserve, WETH_reserve_1, ) = USDT_WETH_pair.getReserves();
+        (WETH_reserve_1, USDT_reserve, ) = USDT_WETH_pair.getReserves();
         (WBTC_reserve, WETH_reserve_2, ) = WBTC_WETH_pair.getReserves();
 
 
@@ -262,11 +257,12 @@ contract LiquidationOperator is IUniswapV2Callee {
         USDT_pool.approve(address(lending_pool), amount1);
         lending_pool.liquidationCall(WBTC_addr, USDT_addr, target_addr, amount1, false);
         uint256 WBTC_balance = WBTC_pool.balanceOf(me_addr);
-        WBTC_pool.transfer(WBTC_WETH_pair_addr, WBTC_balance);
+        WBTC_pool.transfer(address(WBTC_WETH_pair), WBTC_balance);
         uint256 output_WETH = getAmountOut(WBTC_balance, WBTC_reserve, WETH_reserve_1);
 
         WBTC_WETH_pair.swap(0, output_WETH, me_addr, "");
-        WETH_pool.transfer(USDT_WETH_pair_addr, getAmountIn(amount1, WETH_reserve_2, USDT_reserve));
+        uint256 new_amt = getAmountIn(amount1, WETH_reserve_2, USDT_reserve);
+        WETH_pool.transfer(address(USDT_WETH_pair), new_amt);
 
     }
 }
